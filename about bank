@@ -1,0 +1,155 @@
+import java.util.*;
+import java.util.stream.Collectors;
+
+public class Bank {
+    private String bankName;
+    private Map<Integer, Employee> employees;
+    private List<Transaction> transactions;
+    private int nextId;
+
+    public Bank(String bankName) {
+        this.bankName = bankName;
+        this.employees = new LinkedHashMap<>();
+        this.transactions = new ArrayList<>();
+        this.nextId = 1001;
+    }
+
+    // ─── Employee Management ──────────────────────────────────────────────────
+
+    public Employee addEmployee(String name, String department, double salary) {
+        Employee emp = new Employee(nextId++, name, department, salary);
+        employees.put(emp.getEmpId(), emp);
+        System.out.println("Employee added: " + emp.getName() + " | Account: " + emp.getAccountNumber());
+        return emp;
+    }
+
+    public boolean removeEmployee(int empId) {
+        if (!employees.containsKey(empId)) {
+            System.out.println("Employee ID " + empId + " not found.");
+            return false;
+        }
+        Employee emp = employees.remove(empId);
+        System.out.println("Employee removed: " + emp.getName());
+        return true;
+    }
+
+    public Employee getEmployee(int empId) {
+        return employees.get(empId);
+    }
+
+    public List<Employee> getAllEmployees() {
+        return new ArrayList<>(employees.values());
+    }
+
+    // ─── Banking Operations ───────────────────────────────────────────────────
+
+    public boolean deposit(int empId, double amount, String remark) {
+        Employee emp = employees.get(empId);
+        if (emp == null) { System.out.println("Employee not found."); return false; }
+        try {
+            emp.deposit(amount);
+            transactions.add(new Transaction(empId, Transaction.Type.DEPOSIT, amount, emp.getBalance(), remark));
+            System.out.printf("Deposited ₹%.2f to %s. New Balance: ₹%.2f%n", amount, emp.getName(), emp.getBalance());
+            return true;
+        } catch (IllegalArgumentException e) {
+            System.out.println("Deposit failed: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean withdraw(int empId, double amount, String remark) {
+        Employee emp = employees.get(empId);
+        if (emp == null) { System.out.println("Employee not found."); return false; }
+        try {
+            emp.withdraw(amount);
+            transactions.add(new Transaction(empId, Transaction.Type.WITHDRAWAL, amount, emp.getBalance(), remark));
+            System.out.printf("Withdrawn ₹%.2f from %s. New Balance: ₹%.2f%n", amount, emp.getName(), emp.getBalance());
+            return true;
+        } catch (IllegalArgumentException e) {
+            System.out.println("Withdrawal failed: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean transfer(int fromId, int toId, double amount) {
+        Employee from = employees.get(fromId);
+        Employee to   = employees.get(toId);
+        if (from == null || to == null) { System.out.println("One or both employees not found."); return false; }
+        try {
+            from.withdraw(amount);
+            to.deposit(amount);
+            transactions.add(new Transaction(fromId, Transaction.Type.TRANSFER_OUT, amount, from.getBalance(),
+                    "Transfer to " + to.getName()));
+            transactions.add(new Transaction(toId, Transaction.Type.TRANSFER_IN, amount, to.getBalance(),
+                    "Transfer from " + from.getName()));
+            System.out.printf("Transferred ₹%.2f from %s to %s%n", amount, from.getName(), to.getName());
+            return true;
+        } catch (IllegalArgumentException e) {
+            System.out.println("Transfer failed: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public void creditSalaryAll() {
+        System.out.println("\n── Salary Credit Run ─────────────────────────────");
+        for (Employee emp : employees.values()) {
+            emp.creditSalary();
+            transactions.add(new Transaction(emp.getEmpId(), Transaction.Type.SALARY_CREDIT,
+                    emp.getSalary(), emp.getBalance(), "Monthly salary credit"));
+        }
+        System.out.println("─────────────────────────────────────────────────\n");
+    }
+
+    public void creditSalary(int empId) {
+        Employee emp = employees.get(empId);
+        if (emp == null) { System.out.println("Employee not found."); return; }
+        emp.creditSalary();
+        transactions.add(new Transaction(empId, Transaction.Type.SALARY_CREDIT,
+                emp.getSalary(), emp.getBalance(), "Salary credit"));
+    }
+
+    // ─── Reporting ────────────────────────────────────────────────────────────
+
+    public void printStatement(int empId) {
+        Employee emp = employees.get(empId);
+        if (emp == null) { System.out.println("Employee not found."); return; }
+
+        List<Transaction> empTxns = transactions.stream()
+                .filter(t -> t.getEmpId() == empId)
+                .collect(Collectors.toList());
+
+        System.out.println("\n════════════════════════════════════════════════════════");
+        System.out.println("  Bank Statement: " + emp.getName() + " | " + emp.getAccountNumber());
+        System.out.println("════════════════════════════════════════════════════════");
+        if (empTxns.isEmpty()) {
+            System.out.println("  No transactions found.");
+        } else {
+            empTxns.forEach(t -> System.out.println("  " + t));
+        }
+        System.out.printf("%n  Current Balance: ₹%.2f%n", emp.getBalance());
+        System.out.println("════════════════════════════════════════════════════════\n");
+    }
+
+    public void printAllEmployees() {
+        System.out.println("\n═══════════════════════════════════════════════════════════════════════════");
+        System.out.println("  " + bankName + " — Employee Accounts");
+        System.out.println("═══════════════════════════════════════════════════════════════════════════");
+        if (employees.isEmpty()) {
+            System.out.println("  No employees registered.");
+        } else {
+            employees.values().forEach(e -> System.out.println("  " + e));
+        }
+        System.out.println("═══════════════════════════════════════════════════════════════════════════\n");
+    }
+
+    public void printSummary() {
+        double totalSalary  = employees.values().stream().mapToDouble(Employee::getSalary).sum();
+        double totalBalance = employees.values().stream().mapToDouble(Employee::getBalance).sum();
+        System.out.println("\n─── Bank Summary ─────────────────────────────────");
+        System.out.println("  Total Employees  : " + employees.size());
+        System.out.printf ("  Total Salary Payout/Month: ₹%.2f%n", totalSalary);
+        System.out.printf ("  Total Deposits in Bank   : ₹%.2f%n", totalBalance);
+        System.out.println("  Total Transactions : " + transactions.size());
+        System.out.println("──────────────────────────────────────────────────\n");
+    }
+}
