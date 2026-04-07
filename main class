@@ -1,0 +1,135 @@
+import java.util.Scanner;
+
+public class Main {
+
+    static Bank bank = new Bank("TechCorp Federal Bank");
+    static Scanner sc = new Scanner(System.in);
+
+    public static void main(String[] args) {
+        // Seed some demo employees
+        bank.addEmployee("Priya Sharma",   "Engineering",  85000);
+        bank.addEmployee("Rahul Mehta",    "HR",           60000);
+        bank.addEmployee("Anjali Singh",   "Finance",      72000);
+        bank.addEmployee("Rohan Verma",    "Engineering",  90000);
+        bank.addEmployee("Neha Kapoor",    "Marketing",    65000);
+
+        System.out.println("\n╔══════════════════════════════════════════╗");
+        System.out.println("║   Welcome to TechCorp Federal Bank        ║");
+        System.out.println("╚══════════════════════════════════════════╝");
+
+        boolean running = true;
+        while (running) {
+            printMenu();
+            int choice = readInt("Enter choice: ");
+            System.out.println();
+
+            switch (choice) {
+                case 1  -> bank.printAllEmployees();
+                case 2  -> addEmployee();
+                case 3  -> removeEmployee();
+                case 4  -> deposit();
+                case 5  -> withdraw();
+                case 6  -> transfer();
+                case 7  -> creditSalaryMenu();
+                case 8  -> viewStatement();
+                case 9  -> bank.printSummary();
+                case 0  -> { System.out.println("Thank you for using TechCorp Federal Bank. Goodbye!"); running = false; }
+                default -> System.out.println("Invalid option. Please try again.");
+            }
+        }
+        sc.close();
+    }
+
+    static void printMenu() {
+        System.out.println("┌─────────────────────────────────────┐");
+        System.out.println("│           MAIN MENU                 │");
+        System.out.println("├─────────────────────────────────────┤");
+        System.out.println("│  1. View All Employees              │");
+        System.out.println("│  2. Add New Employee                │");
+        System.out.println("│  3. Remove Employee                 │");
+        System.out.println("│  4. Deposit                         │");
+        System.out.println("│  5. Withdraw                        │");
+        System.out.println("│  6. Transfer Funds                  │");
+        System.out.println("│  7. Credit Salary                   │");
+        System.out.println("│  8. View Account Statement          │");
+        System.out.println("│  9. Bank Summary                    │");
+        System.out.println("│  0. Exit                            │");
+        System.out.println("└─────────────────────────────────────┘");
+    }
+
+    static void addEmployee() {
+        System.out.print("Employee Name       : "); String name = sc.nextLine().trim();
+        System.out.print("Department          : "); String dept = sc.nextLine().trim();
+        double salary = readDouble("Monthly Salary (₹) : ");
+        bank.addEmployee(name, dept, salary);
+    }
+
+    static void removeEmployee() {
+        int id = readInt("Enter Employee ID to remove: ");
+        bank.removeEmployee(id);
+    }
+
+    static void deposit() {
+        int id      = readInt("Employee ID  : ");
+        double amt  = readDouble("Amount (₹)   : ");
+        System.out.print("Remark       : "); String remark = sc.nextLine().trim();
+        bank.deposit(id, amt, remark.isEmpty() ? "Cash deposit" : remark);
+    }
+
+    static void withdraw() {
+        int id      = readInt("Employee ID  : ");
+        double amt  = readDouble("Amount (₹)   : ");
+        System.out.print("Remark       : "); String remark = sc.nextLine().trim();
+        bank.withdraw(id, amt, remark.isEmpty() ? "Cash withdrawal" : remark);
+    }
+
+    static void transfer() {
+        int from    = readInt("From Employee ID : ");
+        int to      = readInt("To Employee ID   : ");
+        double amt  = readDouble("Amount (₹)       : ");
+        bank.transfer(from, to, amt);
+    }
+
+    static void creditSalaryMenu() {
+        System.out.println("1. Credit salary to ALL employees");
+        System.out.println("2. Credit salary to a specific employee");
+        int ch = readInt("Choose: ");
+        if (ch == 1) {
+            bank.creditSalaryAll();
+        } else if (ch == 2) {
+            int id = readInt("Employee ID: ");
+            bank.creditSalary(id);
+        }
+    }
+
+    static void viewStatement() {
+        int id = readInt("Employee ID: ");
+        bank.printStatement(id);
+    }
+
+    // ─── Utility helpers ──────────────────────────────────────────────────────
+
+    static int readInt(String prompt) {
+        while (true) {
+            System.out.print(prompt);
+            try {
+                int val = Integer.parseInt(sc.nextLine().trim());
+                return val;
+            } catch (NumberFormatException e) {
+                System.out.println("  Please enter a valid integer.");
+            }
+        }
+    }
+
+    static double readDouble(String prompt) {
+        while (true) {
+            System.out.print(prompt);
+            try {
+                double val = Double.parseDouble(sc.nextLine().trim());
+                return val;
+            } catch (NumberFormatException e) {
+                System.out.println("  Please enter a valid number.");
+            }
+        }
+    }
+}
