@@ -1,0 +1,52 @@
+public class Employee {
+    private int empId;
+    private String name;
+    private String department;
+    private String accountNumber;
+    private double salary;
+    private double balance;
+
+    public Employee(int empId, String name, String department, double salary) {
+        this.empId = empId;
+        this.name = name;
+        this.department = department;
+        this.salary = salary;
+        this.balance = 0.0;
+        this.accountNumber = "ACC" + String.format("%05d", empId);
+    }
+
+    // Getters
+    public int getEmpId()           { return empId; }
+    public String getName()         { return name; }
+    public String getDepartment()   { return department; }
+    public String getAccountNumber(){ return accountNumber; }
+    public double getSalary()       { return salary; }
+    public double getBalance()      { return balance; }
+
+    // Setters
+    public void setName(String name)             { this.name = name; }
+    public void setDepartment(String department) { this.department = department; }
+    public void setSalary(double salary)         { this.salary = salary; }
+
+    public void deposit(double amount) {
+        if (amount <= 0) throw new IllegalArgumentException("Deposit amount must be positive.");
+        balance += amount;
+    }
+
+    public void withdraw(double amount) {
+        if (amount <= 0) throw new IllegalArgumentException("Withdrawal amount must be positive.");
+        if (amount > balance) throw new IllegalArgumentException("Insufficient balance.");
+        balance -= amount;
+    }
+
+    public void creditSalary() {
+        balance += salary;
+        System.out.println("Salary of ₹" + salary + " credited to " + name + "'s account.");
+    }
+
+    @Override
+    public String toString() {
+        return String.format("ID: %d | Name: %-20s | Dept: %-15s | Account: %s | Salary: ₹%-10.2f | Balance: ₹%.2f",
+                empId, name, department, accountNumber, salary, balance);
+    }
+}
